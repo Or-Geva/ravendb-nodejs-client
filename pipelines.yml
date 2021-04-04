@@ -1,0 +1,50 @@
+resources:
+- name: Or_Geva_ravendb_nodejs_client_gitResource
+  type: GitRepo
+  configuration:
+    path: Or-Geva/ravendb-nodejs-client
+    gitProvider: github_Or_Geva_ravendb_nodejs_client_integration
+    buildOn:
+      pullRequestCreate: true
+    branches:
+      include: v5.0
+pipelines:
+- name: Or_Geva_ravendb_nodejs_client_pipeline
+  configuration:
+    runtime:
+      type: image
+      image:
+        custom:
+          name: releases-docker.jfrog.io/jfrog/jfrog-cli-full
+          tag: latest
+  steps:
+  - name: Build
+    type: Bash
+    configuration:
+      inputResources:
+      - name: Or_Geva_ravendb_nodejs_client_gitResource
+      integrations:
+      - name: rt_Or_Geva_ravendb_nodejs_client_integration
+    execution:
+      onExecute:
+      - cd $res_Or_Geva_ravendb_nodejs_client_gitResource_resourcePath
+      - export CI=true
+      - export JFROG_CLI_BUILD_NAME=ravendb-nodejs-client-v5.0
+      - export JFROG_CLI_BUILD_NUMBER=$run_number
+      - export JFROG_CLI_BUILD_URL=$step_url
+      - export JFROG_BUILD_RESULTS=PASS
+      - jfrog c add Or_Geva_ravendb_nodejs_client_serverId --artifactory-url $int_rt_Or_Geva_ravendb_nodejs_client_integration_url
+        --user $int_rt_Or_Geva_ravendb_nodejs_client_integration_user --apikey $int_rt_Or_Geva_ravendb_nodejs_client_integration_apikey
+        --enc-password=false
+      - jfrog rt npm-config --server-id-resolve Or_Geva_ravendb_nodejs_client_serverId
+        --repo-resolve npm-virtual
+      - jfrog rt npm i
+      - jfrog rt bag
+      - jfrog rt bce
+      - jfrog rt bp
+      onComplete:
+      - update_commit_status Or_Geva_ravendb_nodejs_client_gitResource
+      onFailure:
+      - export JFROG_BUILD_RESULTS=FAIL
+      - jfrog rt bce
+      - jfrog rt bp

@@ -38,7 +38,7 @@ pipelines:
         --enc-password=false
       - jfrog rt npm-config --server-id-resolve Or_Geva_ravendb_nodejs_client_serverId
         --repo-resolve npm-virtual
-      - jfrog rt npm i
+      - jfrog rt npmi
       - jfrog rt bag
       - jfrog rt bce
       - jfrog rt bp
